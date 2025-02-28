@@ -1,6 +1,8 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
+import { exec } from 'child_process';
+import * as path from 'path';
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -83,9 +85,27 @@ export function activate(context: vscode.ExtensionContext) {
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
 	const helloworld = () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from bddl-utils!');
+		const editor = vscode.window.activeTextEditor;
+		if (!editor) {
+				vscode.window.showErrorMessage("No active editor found!");
+				return;
+		}
+
+		const filePath = editor.document.fileName;
+		const selections = editor.selections.map(sel => `${sel.start.line + 1}-${sel.end.line + 1}`).join(",");
+
+		const pythonScriptPath = path.join(vscode.workspace.rootPath || "", "process_file.py");
+		
+		// Construct the command to run Python script
+		const command = `python "${pythonScriptPath}" "${filePath}" "${selections}"`;
+
+		exec(command, (error, stdout, stderr) => {
+				if (error) {
+						vscode.window.showErrorMessage(`Error: ${stderr}`);
+						return;
+				}
+				vscode.window.showInformationMessage(stdout);
+		});
 	};
 
 	context.subscriptions.push(
