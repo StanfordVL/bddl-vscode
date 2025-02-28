@@ -2,6 +2,14 @@
   "name": "bddl-utils",
   "displayName": "bddl-utils",
   "description": "Utilities for editing BEHAVIOR-1K BDDL files",
+  "publisher": "StanfordVL",
+  "author": {
+    "name": "Stanford Vision and Learning Lab"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/StanfordVL/bddl-vscode.git"
+  },
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.97.0"
