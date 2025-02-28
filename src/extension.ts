@@ -5,10 +5,11 @@ import * as vscode from 'vscode';
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-	const regex = /\(inroom (.*?) (.*?)\)/g;
+	const regex = /\(inroom (.*?)_\d+ (.*?)\)/g;
 	let decorationMap = new Map<string, vscode.TextEditorDecorationType>();
 
 	function updateDecorations() {
+		// Log the call
 		const editor = vscode.window.activeTextEditor;
 		if (!editor || !editor.document.fileName.endsWith('.bddl')) return; // Check for .bddl extension
 
@@ -21,9 +22,10 @@ export function activate(context: vscode.ExtensionContext) {
 			uniqueMatches.add(match[1]);
 		}
 
-		 // Find the positions of (:init and (:goal
-		const initIndex = text.indexOf('(:init');
-		const goalIndex = text.indexOf('(:goal');
+		// Find the positions of (:init and (:goal
+		// This would be used to temporarily exclude matches within these sections
+		const initIndex = -1; // text.indexOf('(:init');
+		const goalIndex = -1; // text.indexOf('(:goal');
 
 		// Assign a unique color to each match
 		let colors = generateColors(uniqueMatches.size);
@@ -39,6 +41,11 @@ export function activate(context: vscode.ExtensionContext) {
 			decorationMap.set(match, decorationType);
 		});
 
+		// Clear the ranges for each of the decorations
+		decorationMap.forEach((decorationType) => {
+			editor.setDecorations(decorationType, []);
+		});
+
 		// Apply decorations
 		decorationMap.forEach((decorationType, match) => {
 			const ranges: vscode.Range[] = [];
@@ -47,9 +54,13 @@ export function activate(context: vscode.ExtensionContext) {
 				const startPos = editor.document.positionAt(startIndex);
 				const endPos = editor.document.positionAt(startIndex + match.length);
 
-				// Only add ranges outside the (:init and (:goal range
+				// Only add ranges outside the (:init and (:goal range and where the previous character is
+				// either a space or a question mark.
 				if (initIndex === -1 || goalIndex === -1 || startIndex < initIndex || startIndex > goalIndex) {
-					ranges.push(new vscode.Range(startPos, endPos));
+					const prevChar = startIndex > 0 ? text[startIndex - 1] : '';
+					if (prevChar === ' ' || prevChar === '?') {
+						ranges.push(new vscode.Range(startPos, endPos));
+					}
 				}
 				startIndex += match.length;
 			}
@@ -81,15 +92,15 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.registerCommand('bddl-utils.wrapExistentialQuantifier', helloworld),
 		vscode.commands.registerCommand('bddl-utils.highlightMatches', updateDecorations),
 		vscode.window.onDidChangeActiveTextEditor(() => updateDecorations()),
-		vscode.workspace.onDidChangeTextDocument(() => updateDecorations())
+		vscode.window.onDidChangeVisibleTextEditors(() => updateDecorations()),
+		vscode.workspace.onDidChangeTextDocument(() => updateDecorations()),
+		vscode.workspace.onDidOpenTextDocument(() => updateDecorations())
 	);
 
 	// Ensure decorations run when the extension first activates
-	if (vscode.window.activeTextEditor) {
-		updateDecorations();
-	}
+	updateDecorations();
 
-	console.log('bddl-utils is now active!');
+	console.log('bddl-utils is now activated!');
 }
 
 // This method is called when your extension is deactivated

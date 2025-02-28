@@ -10,24 +10,27 @@
     "type": "git",
     "url": "https://github.com/StanfordVL/bddl-vscode.git"
   },
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.97.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onStartupFinished",
+    "workspaceContains:**/*.bddl"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "bddl-utils.wrapExistentialQuantifier",
-        "title": "Wrap in Existential Quantifier"
+        "title": "BDDL: Wrap in Existential Quantifier"
       },
       {
         "command": "bddl-utils.highlightMatches",
-        "title": "Highlight Matches"
+        "title": "BDDL: Highlight Matches"
       }
     ]
   },
