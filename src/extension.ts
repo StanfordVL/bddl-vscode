@@ -84,7 +84,8 @@ export function activate(context: vscode.ExtensionContext) {
 	// The command has been defined in the package.json file
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
-	const helloworld = () => {
+	const autoExistsWrap = () => {
+		vscode.window.showInformationMessage("Command executed!")
 		const editor = vscode.window.activeTextEditor;
 		if (!editor) {
 				vscode.window.showErrorMessage("No active editor found!");
@@ -92,14 +93,12 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		const filePath = editor.document.fileName;
-		const selections = editor.selections.map(sel => `${sel.start.line + 1}-${sel.end.line + 1}`).join(",");
+		const selections = editor.selections.map((sel: vscode.Selection) => `${sel.start.line + 1}-${sel.end.line + 1}`).join(",");
 
-		const pythonScriptPath = path.join(vscode.workspace.rootPath || "", "process_file.py");
-		
 		// Construct the command to run Python script
-		const command = `python "${pythonScriptPath}" "${filePath}" "${selections}"`;
+		const command = `python -m bddl.tools.wrap_in_exists "${filePath}" "${selections}"`;
 
-		exec(command, (error, stdout, stderr) => {
+		exec(command, (error: Error | null, stdout: string, stderr: string) => {
 				if (error) {
 						vscode.window.showErrorMessage(`Error: ${stderr}`);
 						return;
@@ -108,9 +107,28 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	};
 
+	const addStarredInstances = () => {
+		vscode.window.showInformationMessage("Command executed!");
+		const editor = vscode.window.activeTextEditor;
+		if (!editor) {
+			vscode.window.showErrorMessage("No active editor found!");
+			return;
+		}
+		const filePath = editor.document.fileName;
+		const command = `python -m bddl.tools.add_starred_instances "${filePath}"`;
+		exec(command, (error: Error | null, stdout: string, stderr: string) => {
+			if (error) {
+				vscode.window.showErrorMessage(`Error: ${stderr}`);
+				return;
+			}
+			vscode.window.showInformationMessage(stdout);
+		});
+	};
+
 	context.subscriptions.push(
-		vscode.commands.registerCommand('bddl-utils.wrapExistentialQuantifier', helloworld),
+		vscode.commands.registerCommand('bddl-utils.wrapExistentialQuantifier', autoExistsWrap),
 		vscode.commands.registerCommand('bddl-utils.highlightMatches', updateDecorations),
+		vscode.commands.registerCommand('bddl-utils.addStarredInstances', addStarredInstances),
 		vscode.window.onDidChangeActiveTextEditor(() => updateDecorations()),
 		vscode.window.onDidChangeVisibleTextEditors(() => updateDecorations()),
 		vscode.workspace.onDidChangeTextDocument(() => updateDecorations()),
@@ -120,7 +138,7 @@ export function activate(context: vscode.ExtensionContext) {
 	// Ensure decorations run when the extension first activates
 	updateDecorations();
 
-	console.log('bddl-utils is now activated!');
+	// console.log('bddl-utils is now activated!');
 }
 
 // This method is called when your extension is deactivated
